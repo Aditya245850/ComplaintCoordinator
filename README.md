@@ -7,7 +7,7 @@ and receive detailed categorizations and sentiment analysis. It also supports ge
 complaints, streamlining the workflow for customer service teams.
 
 
-How to run:
+How to run locally:
 
 1) Begin by cloning the repository using the command and entering into the directory
 
