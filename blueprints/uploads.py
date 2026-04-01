@@ -11,7 +11,7 @@ from process.Voice import process_Voice
 uploads_bp = Blueprint('uploads', __name__)
 
 
-async def _save_and_process(file_key, process_fn, background=False):
+async def _save_and_process(file_key, process_fn):
     files = await request.files
     if file_key in files:
         f = files[file_key]
@@ -22,19 +22,9 @@ async def _save_and_process(file_key, process_fn, background=False):
 
             username = session.get('username')
             api_key = current_app.config['API_KEY']
-
-            if background:
-                async def run():
-                    try:
-                        await process_fn(file_path, username, api_key)
-                    finally:
-                        if os.path.exists(file_path):
-                            os.remove(file_path)
-                asyncio.create_task(run())
-            else:
+            async def run():
                 await process_fn(file_path, username, api_key)
-                os.remove(file_path)
-
+            asyncio.create_task(run())
     return redirect(url_for('dashboard.index'))
 
 
@@ -42,7 +32,7 @@ async def _save_and_process(file_key, process_fn, background=False):
 async def video_action():
     if 'username' not in session:
         return redirect(url_for('auth.login'))
-    return await _save_and_process('video_file', process_Video, background=True)
+    return await _save_and_process('video_file', process_Video)
 
 
 @uploads_bp.route('/Text', methods=['POST'])
@@ -56,7 +46,7 @@ async def text_action():
 async def voice_action():
     if 'username' not in session:
         return redirect(url_for('auth.login'))
-    return await _save_and_process('voice_file', process_Voice, background=True)
+    return await _save_and_process('voice_file', process_Voice)
 
 
 @uploads_bp.route('/Image', methods=['POST'])

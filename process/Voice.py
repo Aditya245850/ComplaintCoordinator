@@ -4,7 +4,7 @@ from google.cloud.speech_v1 import RecognitionConfig
 from helper.Categorizer import categorizer
 from helper.SentimentAnalysis import sentimentAnalysis
 from helper.StoreIntoDatabase import storeIntoDatabase
-from helper.Summary import summarizer_two
+from helper.Summary import main_summarizer
 
 
 async def process_Voice(file_path, username, API_KEY):
@@ -24,7 +24,7 @@ async def process_Voice(file_path, username, API_KEY):
         result.alternatives[0].transcript for result in response.results
     ).strip()
 
-    summary = await summarizer_two(transcript, API_KEY)
+    summary = await main_summarizer(transcript, API_KEY)
     category = await categorizer(summary, API_KEY)
     sentiment = sentimentAnalysis(transcript)
     await storeIntoDatabase(summary, category, sentiment, username)

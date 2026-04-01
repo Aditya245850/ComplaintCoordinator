@@ -1,7 +1,7 @@
 from openai import AsyncOpenAI
 
 
-async def summarizer_two(text, API_KEY):
+async def main_summarizer(text, API_KEY):
     client = AsyncOpenAI(api_key=API_KEY)
     chat_completion = await client.chat.completions.create(
         model='gpt-3.5-turbo',

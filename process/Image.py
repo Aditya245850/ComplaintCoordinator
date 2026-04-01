@@ -3,7 +3,7 @@ from google.cloud import vision
 from helper.Categorizer import categorizer
 from helper.SentimentAnalysis import sentimentAnalysis
 from helper.StoreIntoDatabase import storeIntoDatabase
-from helper.Summary import summarizer_two
+from helper.Summary import main_summarizer
 
 
 async def process_Image(file_path, username, API_KEY):
@@ -16,7 +16,7 @@ async def process_Image(file_path, username, API_KEY):
 
     text = response.text_annotations[0].description if response.text_annotations else ""
 
-    summary = await summarizer_two(text, API_KEY)
+    summary = await main_summarizer(text, API_KEY)
     category = await categorizer(summary, API_KEY)
     sentiment = sentimentAnalysis(text)
     await storeIntoDatabase(summary, category, sentiment, username)
