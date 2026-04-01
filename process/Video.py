@@ -1,4 +1,3 @@
-import os
 from google.cloud import videointelligence_v1 as videointelligence
 
 from helper.Categorizer import categorizer
@@ -6,27 +5,23 @@ from helper.SentimentAnalysis import sentimentAnalysis
 from helper.StoreIntoDatabase import storeIntoDatabase
 from helper.Summary import video_summarizer
 
-def process_Video(file_path, username, API_KEY):
-    # Google credentials loaded from .env
 
+async def process_Video(file_path, username, API_KEY):
     with open(file_path, "rb") as video_file:
         content = video_file.read()
 
-    client = videointelligence.VideoIntelligenceServiceClient()
-
-
+    client = videointelligence.VideoIntelligenceServiceAsyncClient()
     features = [
         videointelligence.Feature.LABEL_DETECTION,
         videointelligence.Feature.TEXT_DETECTION,
         videointelligence.Feature.OBJECT_TRACKING,
-        videointelligence.Feature.SPEECH_TRANSCRIPTION
+        videointelligence.Feature.SPEECH_TRANSCRIPTION,
     ]
 
-    operation = client.annotate_video(
+    operation = await client.annotate_video(
         request={"features": features, "input_content": content}
     )
-
-    result = operation.result(timeout=600)
+    result = await operation.result(timeout=600)
 
     video_details = []
 
@@ -60,10 +55,7 @@ def process_Video(file_path, username, API_KEY):
 
     video_analysis = "".join(video_details)
 
-    summary = video_summarizer(video_analysis, API_KEY)
-
-    category = categorizer(summary, API_KEY)
-
+    summary = await video_summarizer(video_analysis, API_KEY)
+    category = await categorizer(summary, API_KEY)
     sentiment = sentimentAnalysis(video_analysis)
-
-    storeIntoDatabase(summary, category, sentiment, username)
+    await storeIntoDatabase(summary, category, sentiment, username)

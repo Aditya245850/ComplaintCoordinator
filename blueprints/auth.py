@@ -1,4 +1,4 @@
-from flask import Blueprint, redirect, render_template, request, session, url_for
+from quart import Blueprint, redirect, render_template, request, session, url_for
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from DB_CONNECTION import get_db_connection
@@ -20,22 +20,22 @@ CATEGORIES = [
 
 
 @auth_bp.route('/')
-def home():
-    return render_template('home.html')
+async def home():
+    return await render_template('home.html')
 
 
 @auth_bp.route('/login', methods=['GET', 'POST'])
-def login():
+async def login():
     if request.method == 'POST':
-        username = request.form['username'].lower()
-        password = request.form['password']
+        form = await request.form
+        username = form['username'].lower()
+        password = form['password']
 
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        cursor.execute("SELECT password_hash FROM users WHERE username = %s", (username,))
-        result = cursor.fetchone()
-        cursor.close()
-        conn.close()
+        conn = await get_db_connection()
+        async with conn.cursor() as cur:
+            await cur.execute("SELECT password_hash FROM users WHERE username = %s", (username,))
+            result = await cur.fetchone()
+        await conn.close()
 
         if result:
             if check_password_hash(result[0], password):
@@ -46,42 +46,42 @@ def login():
         else:
             error = "Login not found."
 
-        return render_template('login.html', error=error)
+        return await render_template('login.html', error=error)
 
-    return render_template('login.html')
+    return await render_template('login.html')
 
 
 @auth_bp.route('/register', methods=['GET', 'POST'])
-def register():
+async def register():
     if request.method == 'POST':
-        username = request.form['username'].lower()
-        password = request.form['password']
+        form = await request.form
+        username = form['username'].lower()
+        password = form['password']
         password_hash = generate_password_hash(password)
 
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        cursor.execute(
-            "INSERT INTO users (username, password_hash) VALUES (%s, %s)",
-            (username, password_hash),
-        )
-        cursor.execute("SELECT id FROM users WHERE username = %s", (username,))
-        user_id = cursor.fetchone()[0]
-
-        for category in CATEGORIES:
-            cursor.execute(
-                "INSERT INTO categories (user_id, category) VALUES (%s, %s);",
-                (user_id, category),
+        conn = await get_db_connection()
+        async with conn.cursor() as cur:
+            await cur.execute(
+                "INSERT INTO users (username, password_hash) VALUES (%s, %s)",
+                (username, password_hash),
             )
-        conn.commit()
-        cursor.close()
-        conn.close()
+            await cur.execute("SELECT id FROM users WHERE username = %s", (username,))
+            user_id = (await cur.fetchone())[0]
+
+            for category in CATEGORIES:
+                await cur.execute(
+                    "INSERT INTO categories (user_id, category) VALUES (%s, %s);",
+                    (user_id, category),
+                )
+        await conn.commit()
+        await conn.close()
 
         return redirect(url_for('auth.login'))
 
-    return render_template('register.html')
+    return await render_template('register.html')
 
 
 @auth_bp.route('/logout', methods=['GET', 'POST'])
-def logout():
+async def logout():
     session.clear()
-    return render_template('home.html')
+    return await render_template('home.html')

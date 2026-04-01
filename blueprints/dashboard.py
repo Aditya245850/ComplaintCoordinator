@@ -2,7 +2,7 @@ import os
 import time
 from datetime import datetime
 
-from flask import Blueprint, redirect, render_template, send_file, session, url_for
+from quart import Blueprint, redirect, render_template, send_file, session, url_for
 from reportlab.lib.pagesizes import letter
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer
@@ -14,20 +14,20 @@ dashboard_bp = Blueprint('dashboard', __name__)
 
 
 @dashboard_bp.route('/index', methods=['GET', 'POST'])
-def index():
+async def index():
     if 'username' not in session:
         return redirect(url_for('auth.login'))
     username = session.get('username')
-    graph_html = category_graph(username)
-    return render_template('index.html', graph=graph_html)
+    graph_html = await category_graph(username)
+    return await render_template('index.html', graph=graph_html)
 
 
 @dashboard_bp.route('/download', methods=['POST'])
-def download():
+async def download():
     if 'username' not in session:
         return redirect(url_for('auth.login'))
     username = session.get('username')
-    complaints = downloadContent(username)
+    complaints = await downloadContent(username)
 
     timestamp = int(time.time())
     pdf_file_path = f"complaints_report_{username}_{timestamp}.pdf"
@@ -53,6 +53,6 @@ def download():
 
     doc.build(pdf_content)
 
-    response = send_file(pdf_file_path, as_attachment=True)
+    response = await send_file(pdf_file_path, as_attachment=True)
     os.remove(pdf_file_path)
     return response

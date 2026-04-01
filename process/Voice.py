@@ -1,41 +1,30 @@
-import os
-import librosa
-import soundfile as sf
 from google.cloud import speech_v1 as speech
-from google.cloud.speech_v1 import RecognitionConfig, RecognitionAudio
+from google.cloud.speech_v1 import RecognitionConfig
+
 from helper.Categorizer import categorizer
 from helper.SentimentAnalysis import sentimentAnalysis
 from helper.StoreIntoDatabase import storeIntoDatabase
-from helper.Summary import summarizer
+from helper.Summary import summarizer_two
 
-def process_Voice(file_path, username, API_KEY):
-    # Google credentials loaded from .env
 
+async def process_Voice(file_path, username, API_KEY):
     with open(file_path, "rb") as audio_file:
         content = audio_file.read()
-    
-    client = speech.SpeechClient()
 
+    client = speech.SpeechAsyncClient()
     audio = speech.RecognitionAudio(content=content)
-
     config = speech.RecognitionConfig(
         encoding=RecognitionConfig.AudioEncoding.LINEAR16,
         language_code="en-US",
     )
 
-    response = client.recognize(config=config, audio=audio)
+    response = await client.recognize(config=config, audio=audio)
 
-    transcript = ""
+    transcript = " ".join(
+        result.alternatives[0].transcript for result in response.results
+    ).strip()
 
-    for result in response.results:
-        transcript += result.alternatives[0].transcript + ' '
-
-    transcript = transcript.strip()
-    
-    summary = summarizer(transcript, API_KEY)
-
-    category = categorizer(summary, API_KEY)
-
+    summary = await summarizer_two(transcript, API_KEY)
+    category = await categorizer(summary, API_KEY)
     sentiment = sentimentAnalysis(transcript)
-
-    storeIntoDatabase(summary, category, sentiment, username)
+    await storeIntoDatabase(summary, category, sentiment, username)

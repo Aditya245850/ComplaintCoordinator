@@ -1,7 +1,7 @@
 import os
 
 from dotenv import load_dotenv
-from flask import Flask
+from quart import Quart
 
 from DB_CONNECTION import init_db
 
@@ -9,7 +9,7 @@ load_dotenv()
 
 
 def create_app():
-    app = Flask(__name__)
+    app = Quart(__name__)
     app.secret_key = os.environ.get('SECRET_KEY')
     app.config['API_KEY'] = os.environ.get('OPENAI_API_KEY')
 
@@ -26,7 +26,9 @@ def create_app():
     app.register_blueprint(dashboard_bp)
     app.register_blueprint(uploads_bp)
 
-    init_db()
+    @app.before_serving
+    async def startup():
+        await init_db()
 
     return app
 
