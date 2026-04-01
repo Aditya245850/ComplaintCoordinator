@@ -7,7 +7,7 @@ and receive detailed categorizations and sentiment analysis. It also supports ge
 complaints, streamlining the workflow for customer service teams.
 
 
-How to run:
+How to run locally:
 
 1) Begin by cloning the repository using the command and entering into the directory
 
@@ -25,28 +25,10 @@ How to run:
    
    pip install -t requirements.txt
 
-6) Set up the Database Configuration in DB_CONNECTION.py
-   
-    DB_HOST = ''
-    
-    DB_NAME = ''
-    
-    DB_USER = ''
-    
-    DB_PASS = ''
-    
-    DB_PORT = ''
+6) Set up the Database Configuration, API KEY and Google Credentials in .env
 
-8) Set the API KEYS in application.py
-   
-    API_KEY = 'your_api_key'
 
-10) Retrieve a JSON key file from your Google Cloud console for the necessary APIs (Speech-to-Text, Vision
-   and Video Intelligence)
-   
-     os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = "/path-to-your-json-file.json"
-
-11) Run the Flask application in application.py
+7) Run the Flask application in application.py
 
      flask run
 
