@@ -2,7 +2,8 @@ import os
 import time
 from datetime import datetime
 
-from quart import Blueprint, redirect, render_template, send_file, session, url_for
+from quart import Blueprint, render_template, send_file
+from quart_auth import current_user, login_required
 from reportlab.lib.pagesizes import letter
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer
@@ -14,19 +15,16 @@ dashboard_bp = Blueprint('dashboard', __name__)
 
 
 @dashboard_bp.route('/index', methods=['GET', 'POST'])
+@login_required
 async def index():
-    if 'username' not in session:
-        return redirect(url_for('auth.login'))
-    username = session.get('username')
-    graph_html = await category_graph(username)
+    graph_html = await category_graph(current_user.auth_id)
     return await render_template('index.html', graph=graph_html)
 
 
 @dashboard_bp.route('/download', methods=['POST'])
+@login_required
 async def download():
-    if 'username' not in session:
-        return redirect(url_for('auth.login'))
-    username = session.get('username')
+    username = current_user.auth_id
     complaints = await downloadContent(username)
 
     timestamp = int(time.time())

@@ -1,7 +1,8 @@
 import os
 
 from dotenv import load_dotenv
-from quart import Quart
+from quart import Quart, redirect, url_for
+from quart_auth import QuartAuth, Unauthorized
 
 from DB_CONNECTION import init_db
 
@@ -17,6 +18,12 @@ def create_app():
     app.config['UPLOAD_FOLDER'] = upload_folder
     if not os.path.exists(upload_folder):
         os.makedirs(upload_folder)
+
+    QuartAuth(app)
+
+    @app.errorhandler(Unauthorized)
+    async def redirect_to_login(*_):
+        return redirect(url_for('auth.login'))
 
     from blueprints.auth import auth_bp
     from blueprints.dashboard import dashboard_bp

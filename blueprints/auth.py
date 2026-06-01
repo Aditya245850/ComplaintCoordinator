@@ -1,4 +1,5 @@
-from quart import Blueprint, redirect, render_template, request, session, url_for
+from quart import Blueprint, redirect, render_template, request, url_for
+from quart_auth import AuthUser, login_user, logout_user
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from DB_CONNECTION import get_db_connection
@@ -39,7 +40,7 @@ async def login():
 
         if result:
             if check_password_hash(result[0], password):
-                session['username'] = username
+                login_user(AuthUser(username))
                 return redirect(url_for('dashboard.index'))
             else:
                 error = "Password incorrect."
@@ -83,5 +84,5 @@ async def register():
 
 @auth_bp.route('/logout', methods=['GET', 'POST'])
 async def logout():
-    session.clear()
+    logout_user()
     return await render_template('home.html')
